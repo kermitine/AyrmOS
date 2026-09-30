@@ -1,6 +1,6 @@
-# HelionOS On Raspberry Pi
+# AyrmOS On Raspberry Pi
 
-This folder contains the Raspberry Pi command-line tool and Pi-local HelionOS
+This folder contains the Raspberry Pi command-line tool and Pi-local AyrmOS
 web app for the official RobStride USB-CAN adapter using RobStride private
 extended-ID control.
 
@@ -30,15 +30,15 @@ python3 raspi/robstride_usb.py --self-test
 
 The default private-protocol motor ID is `0x7F` and host ID is `0xFD`.
 
-## HelionOS Install
+## AyrmOS Install
 
 From a fresh Pi:
 
 ```bash
 sudo apt update
 sudo apt install -y git
-git clone https://github.com/kermitine/Helion.git
-cd Helion
+git clone https://github.com/kermitine/AyrmOS.git
+cd AyrmOS
 bash raspi/install_dashboard.sh
 ```
 
@@ -48,68 +48,68 @@ To be explicit about the adapter:
 SERIAL_PORT=auto SERIAL_BAUD=921600 bash raspi/install_dashboard.sh
 ```
 
-The installer creates and enables `robstride-dashboard.service`, so HelionOS
-starts automatically every time the Pi boots. It also adds the HelionOS service
+The installer creates and enables `robstride-dashboard.service`, so AyrmOS
+starts automatically every time the Pi boots. It also adds the AyrmOS service
 user to the `dialout` group so it can open the USB adapter.
 If an older install created CAN helper wrappers or `robstride-can.service`, the
 installer disables and removes those stale pieces.
 
-Open HelionOS from another machine on the same network:
+Open AyrmOS from another machine on the same network:
 
 ```text
 http://<pi-ip-address>
 ```
 
 The installed service listens on port `80` by default, which is why the browser
-URL does not need `:8080`. The service grants HelionOS only the
+URL does not need `:8080`. The service grants AyrmOS only the
 `CAP_NET_BIND_SERVICE` capability needed to bind that low port. To keep using
 the old explicit port instead, reinstall with `DASHBOARD_PORT=8080`.
 
 The install creates these commands:
 
 ```bash
-helion-dashboard --serial-port auto --host 0.0.0.0 --port 80
-helion-robstride --serial-port auto --command scan
-helion-update
+ayrmos-dashboard --serial-port auto --host 0.0.0.0 --port 80
+ayrmos-robstride --serial-port auto --command scan
+ayrmos-update
 ```
 
-`helion-update` pulls the current GitHub branch with `git pull --ff-only`,
-checks the Python files, and restarts the HelionOS service.
+`ayrmos-update` pulls the current GitHub branch with `git pull --ff-only`,
+checks the Python files, and restarts the AyrmOS service.
 
-If the Pi has local edits, `helion-update` saves them in a Git stash before
+If the Pi has local edits, `ayrmos-update` saves them in a Git stash before
 pulling so the update can continue without overwriting those changes. To disable
 that behavior for a one-off update:
 
 ```bash
-HELION_UPDATE_AUTO_STASH=0 helion-update
+AYRMOS_UPDATE_AUTO_STASH=0 ayrmos-update
 ```
 
-Existing installs can use `helion-update` for the USB/private-only migration.
-After the update is running, rerun `bash raspi/install_dashboard.sh` when you
-want the installed systemd service and helper commands cleaned up to match the
-new layout.
+Existing installs can run `bash raspi/update_from_github.sh` from the checkout
+for the USB/private-only migration. After the update is running, rerun
+`bash raspi/install_dashboard.sh` so the installed systemd service and helper
+commands match the new layout.
 
-The web UI shows the HelionOS version in the header. When changing HelionOS or
+The web UI shows the AyrmOS version in the header. When changing AyrmOS or
 Raspberry Pi backend code, increment `APP_VERSION` in
 `raspi/robstride_dashboard.py` before committing so the Pi page makes it obvious
 which update is running.
 
-Use **Shutdown Pi** in HelionOS before removing Raspberry Pi power. The
-button stops the arm motors, saves HelionOS values, flushes the filesystem, and
+Use **Shutdown Pi** in AyrmOS before removing Raspberry Pi power. The
+button stops the arm motors, saves AyrmOS values, flushes the filesystem, and
 then requests Linux poweroff. Wait for the Pi activity LED to stop blinking
-before cutting power. The installer grants the HelionOS service user
-passwordless sudo for `/usr/local/sbin/helion-poweroff` and restarts the
-HelionOS service so the new sudo rule is used. If the button reports interactive
+before cutting power. The installer grants the AyrmOS service user
+passwordless sudo for `/usr/local/sbin/ayrmos-poweroff` and restarts the
+AyrmOS service so the new sudo rule is used. If the button reports interactive
 authentication, update again and rerun `bash raspi/install_dashboard.sh`; the
-HelionOS log will list the Linux user and every shutdown command it tried.
+AyrmOS log will list the Linux user and every shutdown command it tried.
 
 ## MG90S Gripper
 
-HelionOS has an **MG90S Gripper** panel for a small PWM servo gripper. It
+AyrmOS has an **MG90S Gripper** panel for a small PWM servo gripper. It
 uses BCM GPIO numbering and defaults to GPIO `12` on physical pin `32`, with a
 50 Hz servo signal and full-travel `500..2500 us` pulse bounds. Gripper
 commands do not require the RobStride USB-CAN adapter to be online.
-On newer Raspberry Pi OS releases and Raspberry Pi 5, HelionOS prefers the
+On newer Raspberry Pi OS releases and Raspberry Pi 5, AyrmOS prefers the
 `gpiozero` + `lgpio` backend. If that is unavailable, it falls back to
 `RPi.GPIO` for older Pi boards.
 
@@ -125,10 +125,10 @@ pulse range, `90 deg` should be near the servo center; reduce the pulse range if
 `0 deg` or `180 deg` drives into a hard stop. Press **Closed Here** and
 **Open Here** to store those angles, then use the position slider: `0%` maps to
 the closed angle and `100%` maps to the open angle. Use **Release** to stop the
-servo PWM output, or enable **Release After Move** if you want HelionOS to
+servo PWM output, or enable **Release After Move** if you want AyrmOS to
 pulse the servo briefly without holding torque. Press **Save Values** after
 calibration so the GPIO pin, pulse bounds, and open/closed angles load on the
-next HelionOS start.
+next AyrmOS start.
 
 Use SSH for the initial install, service-level changes such as port, Linux
 permissions or systemd edits, and code updates.
@@ -138,23 +138,23 @@ Normal update flow:
 ```bash
 # On your dev machine
 git add .
-git commit -m "Update HelionOS"
+git commit -m "Update AyrmOS"
 git push
 
 # On the Pi
-helion-update
+ayrmos-update
 ```
 
 To apply a service setting change, such as switching an existing install to port
 `80`, pull the latest repo and rerun the installer:
 
 ```bash
-cd ~/Helion
+cd ~/AyrmOS
 git pull
 bash raspi/install_dashboard.sh
 ```
 
-Keep HelionOS on a trusted local network only. It can move the motor and
+Keep AyrmOS on a trusted local network only. It can move the motor and
 change saved motor setup values.
 
 Useful service checks:
@@ -175,15 +175,15 @@ python3 raspi/robstride_usb.py --serial-port auto --command configure
 python3 raspi/robstride_usb.py --serial-port auto --command jog-right
 ```
 
-If HelionOS opens but no motors appear, wait a few seconds and press
-**Scan Private** before rebooting the Pi. HelionOS also runs a delayed
+If AyrmOS opens but no motors appear, wait a few seconds and press
+**Scan Private** before rebooting the Pi. AyrmOS also runs a delayed
 startup scan automatically. If a scan finds no motors, it reopens the RobStride
 USB-CAN adapter and retries, which usually fixes boot timing races between the
 Pi, adapter, and motor power.
 
 ## Arm IK
 
-The HelionOS Arm IK panel solves a three-axis base/shoulder/elbow arm in the
+The AyrmOS Arm IK panel solves a three-axis base/shoulder/elbow arm in the
 browser as you edit the values. The canvas uses the same link lengths, target,
 elbow-up setting, joint offsets, and motor directions that will be sent by
 **Move IK**.
@@ -200,20 +200,20 @@ degrees to `-179` degrees is broken into safe waypoints back through zero
 instead of slipping past the `+180` degree wire limit.
 
 For homing, manually move the arm to its mechanical/kinematic zero pose, then
-press **Home Zero**. HelionOS disables the arm motors, reads each motor's
+press **Home Zero**. AyrmOS disables the arm motors, reads each motor's
 current private-protocol position, stores those positions as the IK offsets, and
-saves them for the next HelionOS start.
+saves them for the next AyrmOS start.
 
 The quick **Home** target preset is separate from **Home Zero**: **Home** points
 the arm vertically up at `x=0`, `y=0`, `z=link1+link2`, while **Home Zero** keeps
 the flat-forward zero pose.
 
-The **Files** step can save the current HelionOS values on the Pi, download
-them as JSON, or upload a JSON values file. Saved values are loaded on HelionOS
+The **Files** step can save the current AyrmOS values on the Pi, download
+them as JSON, or upload a JSON values file. Saved values are loaded on AyrmOS
 startup from:
 
 ```text
-~/.config/helion/dashboard-values.json
+~/.config/ayrmos/dashboard-values.json
 ```
 
 For each IK move, the backend computes:
@@ -234,7 +234,7 @@ without allowing the arm to route underneath the horizontal plane.
 Loaded arms use RobStride operation-control frames for IK moves so the hold loop
 has explicit damping and feed-forward torque. IK targets are streamed as small
 smootherstep route samples with velocity feed-forward; `Velocity Limit` and
-`Acceleration` control the planned route duration. HelionOS defaults to
+`Acceleration` control the planned route duration. AyrmOS defaults to
 `0.35 rad/s`, `2.5 rad/s^2`, `Kp=4.0`, `Kd=2.0`, and `4 A`, and caps saved arm
 values at `6.0 rad/s`, `8 rad/s^2`, `Kp=10.0`, `Kd=5.0`, and `+/-5 Nm` assist
 torque. Motion presets are generated from the current link lengths, elbow bend,
@@ -259,7 +259,7 @@ numbered block span. A loop can use a fixed
 `Count`, or `Forever` to keep replaying its span until **Stop Plan**. Blocks after
 a forever loop are unreachable. **Export Plan** downloads those blocks as a
 portable JSON file, and **Import Plan** accepts either that plan file, a raw block
-array, or a full HelionOS values JSON with `armPlan.blocks`. The backend expands
+array, or a full AyrmOS values JSON with `armPlan.blocks`. The backend expands
 the blocks, checks the same reach, twist, and base-plane safety rules as **Move
 IK**, then streams the resulting route through the normal operation-control hold
 loop. Hand percentages execute through the MG90S gripper path when each Position

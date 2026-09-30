@@ -1014,7 +1014,7 @@ async function saveValues(successText = "Values saved") {
 }
 
 function downloadValues() {
-  downloadJsonFile("helionos-values.json", collectValues());
+  downloadJsonFile("ayrmos-values.json", collectValues());
   setValuesState("Downloaded");
   appendLocalLog("Values downloaded");
 }
@@ -1035,7 +1035,7 @@ function armPlanExportPayload() {
   const arm = armInputState();
   return {
     schemaVersion: 1,
-    kind: "helionos-arm-plan",
+    kind: "ayrmos-arm-plan",
     appVersion: state && state.appVersion ? state.appVersion : undefined,
     exportedAt: new Date().toISOString(),
     units: {
@@ -1083,7 +1083,7 @@ function importArmPlanPayload(payload) {
 }
 
 function downloadArmPlan() {
-  downloadJsonFile("helionos-arm-plan.json", armPlanExportPayload());
+  downloadJsonFile("ayrmos-arm-plan.json", armPlanExportPayload());
   appendLocalLog("Plan exported");
 }
 
@@ -1193,7 +1193,7 @@ async function sendCommand(command, extra = {}) {
   }
   if (
     command === "shutdown-host" &&
-    !confirm("Support the arm first. This will stop the motors, save HelionOS values, and power off the Raspberry Pi. Wait for the Pi activity LED to stop before cutting power.")
+    !confirm("Support the arm first. This will stop the motors, save AyrmOS values, and power off the Raspberry Pi. Wait for the Pi activity LED to stop before cutting power.")
   ) {
     return;
   }
@@ -3202,7 +3202,7 @@ function render(state) {
   const status = $("connectionStatus");
   status.textContent = state.connected ? "Online" : "Offline";
   status.className = `status-pill ${state.connected ? "online" : "offline"}`;
-  $("subtitle").textContent = state.openError || state.transportLabel || "HelionOS control surface";
+  $("subtitle").textContent = state.openError || state.transportLabel || "AyrmOS control surface";
   $("appVersion").textContent = state.appVersion ? `v${state.appVersion}` : "v--";
   setIdSetupMotorOptions(detectedMotors);
   $("configuredState").textContent = state.positionConfigured

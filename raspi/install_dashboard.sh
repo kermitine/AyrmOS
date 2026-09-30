@@ -6,8 +6,8 @@ SERIAL_PORT="${SERIAL_PORT:-auto}"
 SERIAL_BAUD="${SERIAL_BAUD:-921600}"
 DASHBOARD_PORT="${DASHBOARD_PORT:-80}"
 DASHBOARD_HOST="${DASHBOARD_HOST:-0.0.0.0}"
-SERVICE_USER="${HELION_USER:-${SUDO_USER:-$(id -un)}}"
-SERVICE_GROUP="${HELION_GROUP:-$(id -gn "$SERVICE_USER")}"
+SERVICE_USER="${AYRMOS_USER:-${SUDO_USER:-$(id -un)}}"
+SERVICE_GROUP="${AYRMOS_GROUP:-$(id -gn "$SERVICE_USER")}"
 
 escape_sh() {
   printf "%s" "$1" | sed "s/'/'\\\\''/g"
@@ -45,36 +45,36 @@ chmod +x "$REPO_DIR/raspi/robstride_usb.py"
 chmod +x "$REPO_DIR/raspi/robstride_dashboard.py"
 chmod +x "$REPO_DIR/raspi/update_from_github.sh"
 
-sudo tee /usr/local/bin/helion-dashboard >/dev/null <<EOF
+sudo tee /usr/local/bin/ayrmos-dashboard >/dev/null <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 cd '$REPO_ESC'
 exec /usr/bin/python3 raspi/robstride_dashboard.py "\$@"
 EOF
 
-sudo tee /usr/local/bin/helion-update >/dev/null <<EOF
+sudo tee /usr/local/bin/ayrmos-update >/dev/null <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 cd '$REPO_ESC'
 exec bash raspi/update_from_github.sh "\$@"
 EOF
 
-sudo tee /usr/local/bin/helion-robstride >/dev/null <<EOF
+sudo tee /usr/local/bin/ayrmos-robstride >/dev/null <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 cd '$REPO_ESC'
 exec /usr/bin/python3 raspi/robstride_usb.py "\$@"
 EOF
 
-sudo chmod +x /usr/local/bin/helion-dashboard /usr/local/bin/helion-update /usr/local/bin/helion-robstride
-sudo rm -f /usr/local/bin/helion-can-up /usr/local/bin/helion-can-down
+sudo chmod +x /usr/local/bin/ayrmos-dashboard /usr/local/bin/ayrmos-update /usr/local/bin/ayrmos-robstride
+sudo rm -f /usr/local/bin/ayrmos-can-up /usr/local/bin/ayrmos-can-down
 
-sudo tee /usr/local/sbin/helion-restart-dashboard >/dev/null <<'EOF'
+sudo tee /usr/local/sbin/ayrmos-restart-dashboard >/dev/null <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 exec systemctl restart robstride-dashboard.service
 EOF
-sudo tee /usr/local/sbin/helion-poweroff >/dev/null <<'EOF'
+sudo tee /usr/local/sbin/ayrmos-poweroff >/dev/null <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ -x /usr/bin/systemctl ]]; then
@@ -88,16 +88,16 @@ if [[ -x /usr/sbin/shutdown ]]; then
 fi
 exec /sbin/shutdown -h now
 EOF
-sudo chmod +x /usr/local/sbin/helion-restart-dashboard /usr/local/sbin/helion-poweroff
+sudo chmod +x /usr/local/sbin/ayrmos-restart-dashboard /usr/local/sbin/ayrmos-poweroff
 
 if [[ "$SERVICE_USER" != "root" ]]; then
-  sudo tee /etc/sudoers.d/helion-dashboard >/dev/null <<EOF
-$SERVICE_USER ALL=(root) NOPASSWD: /usr/local/sbin/helion-restart-dashboard, /usr/local/sbin/helion-poweroff, /usr/bin/systemctl poweroff, /bin/systemctl poweroff, /usr/sbin/shutdown -h now, /sbin/shutdown -h now
+  sudo tee /etc/sudoers.d/ayrmos-dashboard >/dev/null <<EOF
+$SERVICE_USER ALL=(root) NOPASSWD: /usr/local/sbin/ayrmos-restart-dashboard, /usr/local/sbin/ayrmos-poweroff, /usr/bin/systemctl poweroff, /bin/systemctl poweroff, /usr/sbin/shutdown -h now, /sbin/shutdown -h now
 EOF
-  sudo chmod 440 /etc/sudoers.d/helion-dashboard
-  sudo visudo -cf /etc/sudoers.d/helion-dashboard >/dev/null
-  if ! sudo -u "$SERVICE_USER" sudo -n -l /usr/local/sbin/helion-poweroff >/dev/null; then
-    echo "Warning: $SERVICE_USER could not validate passwordless /usr/local/sbin/helion-poweroff." >&2
+  sudo chmod 440 /etc/sudoers.d/ayrmos-dashboard
+  sudo visudo -cf /etc/sudoers.d/ayrmos-dashboard >/dev/null
+  if ! sudo -u "$SERVICE_USER" sudo -n -l /usr/local/sbin/ayrmos-poweroff >/dev/null; then
+    echo "Warning: $SERVICE_USER could not validate passwordless /usr/local/sbin/ayrmos-poweroff." >&2
   fi
 fi
 
@@ -106,7 +106,7 @@ sudo rm -f /etc/systemd/system/robstride-can.service
 
 sudo tee /etc/systemd/system/robstride-dashboard.service >/dev/null <<EOF
 [Unit]
-Description=HelionOS web control service
+Description=AyrmOS web control service
 After=network-online.target
 Wants=network-online.target
 
@@ -117,7 +117,7 @@ Group=$SERVICE_GROUP
 ${SUPPLEMENTARY_GROUPS:+SupplementaryGroups=$SUPPLEMENTARY_GROUPS}
 $DASHBOARD_CAPABILITY_LINES
 NoNewPrivileges=false
-ExecStart=/usr/local/bin/helion-dashboard --host $DASHBOARD_HOST --port $DASHBOARD_PORT --serial-port $SERIAL_PORT --serial-baud $SERIAL_BAUD
+ExecStart=/usr/local/bin/ayrmos-dashboard --host $DASHBOARD_HOST --port $DASHBOARD_PORT --serial-port $SERIAL_PORT --serial-baud $SERIAL_BAUD
 Restart=on-failure
 RestartSec=2
 
@@ -136,8 +136,8 @@ else
   DASHBOARD_URL="http://${PI_IP}:${DASHBOARD_PORT}"
 fi
 
-echo "HelionOS installed."
+echo "AyrmOS installed."
 echo "Open: ${DASHBOARD_URL}"
-echo "Update later with: helion-update"
-echo "HelionOS service runs as user: ${SERVICE_USER}"
+echo "Update later with: ayrmos-update"
+echo "AyrmOS service runs as user: ${SERVICE_USER}"
 echo "RobStride USB adapter: ${SERIAL_PORT} at ${SERIAL_BAUD} baud"

@@ -5,7 +5,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REMOTE="${1:-origin}"
 BRANCH="${2:-}"
 GIT_LOCK_STALE_SECONDS="${GIT_LOCK_STALE_SECONDS:-60}"
-AUTO_STASH="${HELION_UPDATE_AUTO_STASH:-1}"
+AUTO_STASH="${AYRMOS_UPDATE_AUTO_STASH:-1}"
 STASH_REF=""
 
 if ! git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -18,7 +18,7 @@ if [[ -z "$BRANCH" ]]; then
 fi
 
 if [[ -z "$BRANCH" ]]; then
-  echo "Could not determine current branch. Pass one explicitly, e.g. helion-update origin main" >&2
+  echo "Could not determine current branch. Pass one explicitly, e.g. ayrmos-update origin main" >&2
   exit 2
 fi
 
@@ -30,7 +30,7 @@ clear_stale_git_lock() {
 
   if command -v fuser >/dev/null 2>&1 && fuser "$lock_path" >/dev/null 2>&1; then
     echo "[update] Git lock is currently held: $lock_path" >&2
-    echo "[update] Wait for the other Git process to finish, then run helion-update again." >&2
+    echo "[update] Wait for the other Git process to finish, then run ayrmos-update again." >&2
     exit 3
   fi
 
@@ -64,7 +64,7 @@ if [[ -n "$(git -C "$REPO_DIR" status --porcelain)" ]]; then
   echo "[update] Local changes found; saving them in a Git stash before pull."
   git -C "$REPO_DIR" status --short
   STASH_BEFORE="$(git -C "$REPO_DIR" rev-parse --verify -q refs/stash || true)"
-  git -C "$REPO_DIR" stash push -u -m "helion-update backup $(date -Is)"
+  git -C "$REPO_DIR" stash push -u -m "ayrmos-update backup $(date -Is)"
   STASH_AFTER="$(git -C "$REPO_DIR" rev-parse --verify -q refs/stash || true)"
   if [[ -n "$STASH_AFTER" && "$STASH_AFTER" != "$STASH_BEFORE" ]]; then
     STASH_REF="$STASH_AFTER"
@@ -84,15 +84,15 @@ if [[ -n "$STASH_REF" ]]; then
 fi
 
 if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files robstride-dashboard.service >/dev/null 2>&1; then
-  if [[ "${HELION_NO_RESTART:-0}" == "1" ]]; then
-    echo "[update] HELION_NO_RESTART=1; skipped dashboard restart."
+  if [[ "${AYRMOS_NO_RESTART:-0}" == "1" ]]; then
+    echo "[update] AYRMOS_NO_RESTART=1; skipped dashboard restart."
   elif [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
     systemctl restart robstride-dashboard.service
     systemctl --no-pager --lines=12 status robstride-dashboard.service || true
-  elif sudo -n /usr/local/sbin/helion-restart-dashboard; then
+  elif sudo -n /usr/local/sbin/ayrmos-restart-dashboard; then
     systemctl --no-pager --lines=12 status robstride-dashboard.service || true
   elif [[ -t 0 ]]; then
-    sudo /usr/local/sbin/helion-restart-dashboard
+    sudo /usr/local/sbin/ayrmos-restart-dashboard
     systemctl --no-pager --lines=12 status robstride-dashboard.service || true
   else
     echo "[update] dashboard restart was not permitted; run: sudo systemctl restart robstride-dashboard.service"

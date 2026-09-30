@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HelionOS web control surface for the RobStride USB-CAN adapter."""
+"""AyrmOS web control surface for the RobStride USB-CAN adapter."""
 
 from __future__ import annotations
 
@@ -227,8 +227,8 @@ ARM_MOTION_PRESET_LABELS = {
     "flex": "Flex",
 }
 SHUTDOWN_COMMANDS = (
-    ("/usr/bin/sudo", "-n", "/usr/local/sbin/helion-poweroff"),
-    ("/bin/sudo", "-n", "/usr/local/sbin/helion-poweroff"),
+    ("/usr/bin/sudo", "-n", "/usr/local/sbin/ayrmos-poweroff"),
+    ("/bin/sudo", "-n", "/usr/local/sbin/ayrmos-poweroff"),
     ("/usr/bin/sudo", "-n", "/usr/bin/systemctl", "poweroff"),
     ("/bin/sudo", "-n", "/usr/bin/systemctl", "poweroff"),
     ("/usr/bin/sudo", "-n", "/bin/systemctl", "poweroff"),
@@ -237,7 +237,7 @@ SHUTDOWN_COMMANDS = (
     ("/bin/sudo", "-n", "/usr/sbin/shutdown", "-h", "now"),
     ("/usr/bin/sudo", "-n", "/sbin/shutdown", "-h", "now"),
     ("/bin/sudo", "-n", "/sbin/shutdown", "-h", "now"),
-    ("/usr/local/sbin/helion-poweroff",),
+    ("/usr/local/sbin/ayrmos-poweroff",),
     ("/usr/bin/systemctl", "poweroff"),
     ("/bin/systemctl", "poweroff"),
     ("/usr/sbin/shutdown", "-h", "now"),
@@ -248,8 +248,8 @@ ROOT_DIR = Path(__file__).resolve().parent
 WEB_DIR = ROOT_DIR / "web"
 VALUES_PATH = Path(
     os.environ.get(
-        "HELION_VALUES_PATH",
-        Path.home() / ".config" / "helion" / "dashboard-values.json",
+        "AYRMOS_VALUES_PATH",
+        Path.home() / ".config" / "ayrmos" / "dashboard-values.json",
     )
 )
 APP_VERSION = "2026.09.08.06"
@@ -1343,7 +1343,7 @@ class DashboardController:
 
         message = (
             "Shutdown command failed. Re-run raspi/install_dashboard.sh to grant "
-            "passwordless /usr/local/sbin/helion-poweroff, or shut down with sudo poweroff."
+            "passwordless /usr/local/sbin/ayrmos-poweroff, or shut down with sudo poweroff."
         )
         if last_error:
             message += f" Last error: {last_error}"
@@ -2906,7 +2906,7 @@ class DashboardController:
         if persist:
             self.log(f"Values saved to {VALUES_PATH}")
         elif bus_changed or control_changed:
-            self.log("HelionOS values applied")
+            self.log("AyrmOS values applied")
         result: Dict[str, Any] = {
             "ok": True,
             "path": str(VALUES_PATH),
@@ -5367,7 +5367,7 @@ class DashboardController:
 
 
 class DashboardHandler(BaseHTTPRequestHandler):
-    server_version = "HelionOS/1.0"
+    server_version = "AyrmOS/1.0"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -5480,7 +5480,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--motor-id", default=hex(DEFAULT_MOTOR_ID))
     parser.add_argument("--host-id", default=hex(DEFAULT_HOST_ID))
     parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--no-open", action="store_true", help="start HelionOS without opening the USB adapter")
+    parser.add_argument("--no-open", action="store_true", help="start AyrmOS without opening the USB adapter")
     return parser.parse_args()
 
 
@@ -5495,7 +5495,7 @@ def main() -> int:
         open_can=not args.no_open,
     )
     server = DashboardServer((args.host, args.port), DashboardHandler, controller)
-    print(f"HelionOS listening on http://{args.host}:{args.port}")
+    print(f"AyrmOS listening on http://{args.host}:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
